@@ -1,0 +1,105 @@
+#NEOs are 'Near Earth Objects'. They may pose a risk to Earth and civilization. This program is inspired by NASA's Double Asteroid Redirection Test (DART) mission in 2022.
+#This program allows users to survey the NEOs around Earth using data from NASA's Jet Propulsion Laboratory at the California Institute of Technology 
+#This program surves as practice for APIs
+
+#API Documentation: https://ssd-api.jpl.nasa.gov/doc/cad.html
+#JPL NEO Homepage: https://cneos.jpl.nasa.gov/ca/
+
+
+
+#IMPORTS
+import requests
+import json
+from pprint import pprint
+
+#VARIABLES AND CONSTANTS
+apiBase = "https://ssd-api.jpl.nasa.gov/cad.api"
+loop = True
+
+#WELCOME
+print("Welcome to the Near Earth Object (NEO) Dashboard.\n")
+print("This program searches and sorts data from NASA JPL based on your requests\n\n")
+
+print("DISTANCE FROM EARTH\n\n")
+print("How close to Earth would you like to look?\n")
+print("Measured in units of 'Lunar Distances'.\n")
+print("Use decimals.\n")
+lunarDistance = input("->")
+
+print("DATE RANGE\n\n")
+print("When would you like to start looking from?")
+print("Year (ex '2022')")
+minYear = input("->")
+print("Month (ex '06')")
+minMonth = input("->")
+print("Day (ex '01')")
+minDay = input("->")
+
+#API REQUEST
+lunarDistanceApiText = "dist-max="+lunarDistance+"LD"
+minDate = minYear+"-"+minMonth+"-"+minDay
+minDateText = "date-min="+minDate
+
+apiCallText = apiBase+"?"+lunarDistanceApiText+"&"+ minDateText+"&sort=h"
+
+print(apiCallText)
+print("Collecting Data, STANDBY\n")
+
+response = requests.get(apiCallText)
+
+#response = requests.get('https://ssd-api.jpl.nasa.gov/cad.api?dist-max=1LD&date-min=2022-01-01&diameter=true&sort=h')
+response.raise_for_status()  # check for errors
+#print(response.status_code)
+# Load JSON data into a Python variable.
+jsonData = json.loads(response.text)
+
+if response.status_code == 200:
+    print("Data Successfully Collected")
+else:
+    print("Error Collecting Data, Try Again Later")
+
+#DATA ANALYSIS
+#Object Count
+dataToProcess = jsonData['data']
+print("There are "+jsonData['count']+" objects that have (or will) come within "+lunarDistance+" Lunar Distances of Earth since "+minDate+"\n")
+
+#Data Presentation Selection
+while loop == True:
+    print("What would you like to do?\n")
+    print("1: Review Raw Data\n")
+    print("2: See Names of Objects\n")
+    print("3: View Data on Object Magnitudes\n")
+    print("4: Analyze Closest Object\n")
+
+    print("0: Exit\n")
+    print()
+    choice = input("->")
+    try:
+        if choice == "1":
+            print("Raw Data")
+            pprint(jsonData)
+        if choice == "2":
+            print("Gathering Names of Objects")
+            names = []
+            for data in dataToProcess:
+                names.append(data[0])
+            print(names)
+            input("Press ENTER to continue")
+        if choice == "3":
+            print("Retrieving Data on Object Magnitudes")
+            magnitude = []
+            for data in dataToProcess:
+                magnitude.append(data[4])
+            pprint(magnitude)    
+        if choice == "4":
+            print("Analyzing Closest Object")
+            distance = []
+            for data in dataToProcess:
+                distance.append(data[10])
+            print(distance)
+        if choice == "0":
+            print("Exiting")
+            loop = False
+            
+    except:
+        print("Invalid Choice, please try again (Make sure to use numbers('5').")
